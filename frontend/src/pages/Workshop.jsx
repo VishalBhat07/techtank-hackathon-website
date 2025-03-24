@@ -90,13 +90,16 @@ const Workshop = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateStep2()) return;
-    
+
     setIsSubmitting(true);
     setError("");
 
+    const uid = "TT" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
     const formData = new FormData();
+    formData.append("uid", uid);
     formData.append("name", name);
     formData.append("email", email);
     formData.append("phoneNumber", phoneNumber);
@@ -104,7 +107,7 @@ const Workshop = () => {
     formData.append("screenshot", screenshot);
 
     try {
-      console.log(screenshot);
+      // console.log(screenshot);
       const response = await axios.post(
         backend_url + "/api/registration/workshop",
         formData
@@ -120,7 +123,7 @@ const Workshop = () => {
           setPhoneNumber("");
           setTransactionId("");
           setScreenshot(null);
-          navigate('/');
+          navigate("/");
         }, 2000);
       }
     } catch (error) {
@@ -284,7 +287,9 @@ const Workshop = () => {
                   setFieldErrors({ ...fieldErrors, phoneNumber: "" });
                 }}
                 className={`w-full p-3 bg-[#2a2a2a] border ${
-                  fieldErrors.phoneNumber ? "border-red-500" : "border-[#3a3a3a]"
+                  fieldErrors.phoneNumber
+                    ? "border-red-500"
+                    : "border-[#3a3a3a]"
                 } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
               />
@@ -351,7 +356,9 @@ const Workshop = () => {
                   setFieldErrors({ ...fieldErrors, transactionId: "" });
                 }}
                 className={`w-full p-3 bg-[#2a2a2a] border ${
-                  fieldErrors.transactionId ? "border-red-500" : "border-[#3a3a3a]"
+                  fieldErrors.transactionId
+                    ? "border-red-500"
+                    : "border-[#3a3a3a]"
                 } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
                 placeholder="Enter your transaction ID"
@@ -372,7 +379,9 @@ const Workshop = () => {
                   accept="image/*"
                   onChange={handleFileChange}
                   className={`w-full p-3 bg-[#2a2a2a] border ${
-                    fieldErrors.screenshot ? "border-red-500" : "border-[#3a3a3a]"
+                    fieldErrors.screenshot
+                      ? "border-red-500"
+                      : "border-[#3a3a3a]"
                   } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#38AAC9] file:text-white hover:file:bg-[#38AAC9]/90`}
                 />
               </div>

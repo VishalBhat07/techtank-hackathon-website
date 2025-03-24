@@ -17,6 +17,7 @@ const TeamMemberSchema = new mongoose.Schema({
 });
 
 const TeamSchema = new mongoose.Schema({
+  uid: { type: String, required: true },
   teamName: { type: String, required: true, unique: true, trim: true },
   members: { type: [TeamMemberSchema], required: true },
   transactionId: { type: String, required: true, unique: true, trim: true },

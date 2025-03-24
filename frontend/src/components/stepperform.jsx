@@ -23,11 +23,11 @@ const Stepper = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [teamName, setTeamName] = useState("");
-  const [memberCount, setMemberCount] = useState(2); 
-const [members, setMembers] = useState([
-  { name: "", email: "", phoneNumber: "", isTeamLead: true },
-  { name: "", email: "", phoneNumber: "", isTeamLead: false },
-]);
+  const [memberCount, setMemberCount] = useState(2);
+  const [members, setMembers] = useState([
+    { name: "", email: "", phoneNumber: "", isTeamLead: true },
+    { name: "", email: "", phoneNumber: "", isTeamLead: false },
+  ]);
   const [transactionId, setTransactionId] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,10 +38,10 @@ const [members, setMembers] = useState([
   const handleMemberCountChange = (e) => {
     const count = parseInt(e.target.value);
     setMemberCount(count);
-    
+
     // Create new members array with the selected count
     let newMembers = [...members];
-    
+
     // Make sure we have exactly 'count' members
     if (newMembers.length < count) {
       // Add more members if needed
@@ -56,13 +56,13 @@ const [members, setMembers] = useState([
     } else if (newMembers.length > count) {
       newMembers = newMembers.slice(0, count);
     }
-    
+
     newMembers[0] = {
       ...newMembers[0],
       email: email || newMembers[0].email,
-      isTeamLead: true
+      isTeamLead: true,
     };
-    
+
     setMembers(newMembers);
   };
 
@@ -92,7 +92,10 @@ const [members, setMembers] = useState([
     }
 
     try {
+      const uid =
+        "TT" + Math.random().toString(36).substring(2, 8).toUpperCase();
       const formData = new FormData();
+      formData.append("uid", uid);
       formData.append("teamName", teamName);
       formData.append("transactionId", transactionId);
       formData.append("screenshot", screenshot); // Send as Base64
@@ -117,7 +120,7 @@ const [members, setMembers] = useState([
           ]);
           setTransactionId("");
           setScreenshot(null);
-          navigate('/');
+          navigate("/");
         }, 2000);
       }
     } catch (error) {
@@ -134,15 +137,15 @@ const [members, setMembers] = useState([
       setError("Please enter your email address");
       return;
     }
-    
+
     if (currentStep === 2 && !teamName) {
       setError("Please enter your team name");
       return;
     }
-    
+
     if (currentStep === 2) {
       let updatedMembers = [...members];
-      
+
       if (updatedMembers.length < memberCount) {
         while (updatedMembers.length < memberCount) {
           updatedMembers.push({
@@ -155,29 +158,29 @@ const [members, setMembers] = useState([
       } else if (updatedMembers.length > memberCount) {
         updatedMembers = updatedMembers.slice(0, memberCount);
       }
-      
+
       updatedMembers[0] = {
         ...updatedMembers[0],
         email: email || updatedMembers[0].email,
-        isTeamLead: true
+        isTeamLead: true,
       };
-      
+
       setMembers(updatedMembers);
     }
-    
+
     if (currentStep === 3) {
-      const isValid = members.every(member => 
-        member.name && member.email && member.phoneNumber
+      const isValid = members.every(
+        (member) => member.name && member.email && member.phoneNumber
       );
-      
+
       if (!isValid) {
         setError("Please fill in all team member details");
         return;
       }
     }
-    
+
     setError("");
-    
+
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -215,7 +218,11 @@ const [members, setMembers] = useState([
                 onClick={() => goToStep(index + 1)}
                 disabled={index + 1 > currentStep}
                 className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-lg font-bold transition-all duration-300 border-2 focus:outline-none
-                  ${index + 1 > currentStep ? 'opacity-50 cursor-not-allowed' : ''}
+                  ${
+                    index + 1 > currentStep
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }
                   ${
                     index + 1 < currentStep
                       ? `bg-${colors.blue} text-${colors.yellow} border-${colors.blue}`
@@ -385,9 +392,9 @@ const [members, setMembers] = useState([
             <button
               onClick={nextStep}
               disabled={!teamName}
-              style={{ 
+              style={{
                 backgroundColor: colors.yellow,
-                opacity: !teamName ? "0.5" : "1" 
+                opacity: !teamName ? "0.5" : "1",
               }}
               className="px-3 sm:px-4 py-2 sm:py-3 rounded-full font-medium text-black hover:bg-opacity-90 transform hover:scale-105 transition duration-300 shadow-lg text-sm sm:text-base min-w-20"
             >
@@ -412,7 +419,7 @@ const [members, setMembers] = useState([
           <h3 className="text-xl font-semibold text-white">
             Team Members ({memberCount})
           </h3>
-  
+
           {/* Only show the first 'memberCount' members */}
           {members.slice(0, memberCount).map((member, index) => (
             <div
@@ -479,13 +486,13 @@ const [members, setMembers] = useState([
               </div>
             </div>
           ))}
-  
+
           {error && (
             <div className="bg-red-900 border border-red-700 text-white px-4 py-3 rounded mb-4">
               {error}
             </div>
           )}
-  
+
           <div className="flex justify-between mt-8 flex-wrap gap-4">
             <button
               onClick={prevStep}

@@ -60,7 +60,7 @@ const WorkshopData = () => {
       </button>
 
       {workshops.length === 0 ? (
-        <p className="error">No workshop registrations yet.</p>
+        <p className="error">Fetching registration details ...</p>
       ) : (
         <table>
           <thead>
@@ -69,6 +69,7 @@ const WorkshopData = () => {
               <th>Email</th>
               <th>Phone</th>
               <th>Transaction ID</th>
+              <th>UID</th> {/* Added MID column */}
               <th>Screenshot</th>
               <th>Status</th>
             </tr>
@@ -80,6 +81,7 @@ const WorkshopData = () => {
                 <td>{workshop.email}</td>
                 <td>{workshop.phoneNumber || "N/A"}</td>
                 <td>{workshop.transactionId}</td>
+                <td>{workshop.uid || "N/A"}</td> {/* Display MID */}
                 <td>
                   {workshop.image ? (
                     <img

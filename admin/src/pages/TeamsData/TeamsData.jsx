@@ -63,17 +63,18 @@ const TeamsData = () => {
       </button>
 
       {teams.length === 0 ? (
-        <p className="error">No teams registered yet.</p>
+        <p className="error">Fetching team details ...</p>
       ) : (
         <table>
           <thead>
             <tr>
               <th>Team Name</th>
+              <th>Team ID</th>
               <th>Team Leader</th>
               <th>Other Members</th>
               <th>Transaction ID</th>
               <th>Screenshot</th>
-              <th>Status</th> {/* New Column */}
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -86,6 +87,7 @@ const TeamsData = () => {
               return (
                 <tr key={team.transactionId}>
                   <td>{team.teamName}</td>
+                  <td>{team.uid || "N/A"}</td>
                   <td>
                     {leader ? (
                       <div>
@@ -144,7 +146,6 @@ const TeamsData = () => {
         </table>
       )}
 
-      {/* Modal for enlarged image */}
       {selectedImage && (
         <div className="modal" onClick={() => setSelectedImage(null)}>
           <div className="modal-content">
