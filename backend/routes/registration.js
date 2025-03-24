@@ -13,8 +13,8 @@ const upload = multer({ storage: storage });
 router.post("/workshop", upload.single("screenshot"), async (req, res) => {
   try {
     console.log(req.body);
-    const { name, email, phoneNumber, transactionId } = req.body;
-    console.log("Received registration request:", { name, transactionId });
+    const { uid, name, email, phoneNumber, transactionId } = req.body;
+    console.log("Received registration request:", { name, transactionId, uid });
     console.log(req.file);
 
     // Check if user already exists
@@ -32,6 +32,7 @@ router.post("/workshop", upload.single("screenshot"), async (req, res) => {
 
     // Create a new user
     const newUser = new WorkshopUser({
+      uid,
       name,
       email,
       phoneNumber,
@@ -54,7 +55,10 @@ router.post("/workshop", upload.single("screenshot"), async (req, res) => {
 // Route to get all transaction screenshots
 router.get("/screenshots", async (req, res) => {
   try {
-    const users = await WorkshopUser.find({}, "name email phoneNumber transactionId image"); // Only fetch relevant fields
+    const users = await WorkshopUser.find(
+      {},
+      "uid name email phoneNumber transactionId image"
+    ); // Only fetch relevant fields
 
     console.log(users);
 
@@ -73,7 +77,7 @@ router.get("/screenshots", async (req, res) => {
 
 router.post("/register", upload.single("screenshot"), async (req, res) => {
   try {
-    let { teamName, members, transactionId } = req.body;
+    let { uid, teamName, members, transactionId } = req.body;
 
     console.log("Received registration request:", { teamName });
 
@@ -103,6 +107,7 @@ router.post("/register", upload.single("screenshot"), async (req, res) => {
     }
 
     const team = new Team({
+      uid,
       teamName,
       members,
       transactionId,
@@ -132,7 +137,7 @@ router.get("/teams", async (req, res) => {
 });
 
 router.post("/send-email", async (req, res) => {
-  const { email, subject, message } = req.body;
+  const { uid, email, subject, message } = req.body;
 
   if (!email || !subject || !message) {
     return res
@@ -140,7 +145,7 @@ router.post("/send-email", async (req, res) => {
       .json({ success: false, message: "All fields are required" });
   }
 
-  const result = await sendEmail(email, subject, message);
+  const result = await sendEmail(uid, email, subject, message);
   res.json(result);
 });
 

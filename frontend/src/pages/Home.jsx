@@ -55,23 +55,23 @@ const Home = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: gridStyles }} />
-      {/* Adjusted height to account for the navbar */}
+
       <div className="flex flex-col items-center justify-center bg-black text-white text-center px-4 relative"
            style={{ height: "calc(100vh - 4rem)" }}> {/* Adjust 4rem to match your navbar height */}
         {/* LOGOS - Larger and More Responsive */}
         <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 mb-14">
           <img
-            src={rv_logo}
+            src="/rvce.png"
             alt="RVCE"
             className="h-16 w-auto sm:h-20 md:h-28 lg:h-32 object-contain" // Adjusted h-16 for mobile
           />
           <img
-            src={acm_logo}
+            src="/acm.png"
             alt="ACM RVCE"
             className="h-16 w-auto sm:h-20 md:h-28 lg:h-32 object-contain" // Adjusted h-16 for mobile
           />
           <img
-            src={gdg_logo}
+            src="/gdg.png"
             alt="Google Developer Group"
             className="h-16 w-auto sm:h-20 md:h-28 lg:h-32 object-contain" // Adjusted h-16 for mobile
           />

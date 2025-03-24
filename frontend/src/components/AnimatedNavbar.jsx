@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../../public/tech_TANK.jpeg";
 
 // CSS variables - you can adjust these as needed
 const colors = {
@@ -153,7 +152,7 @@ const AnimatedNavbar = () => {
               <span>
                 {" "}
                 <img
-                  src={logo}
+                  src="/tech_TANK.jpeg"
                   alt="Logo"
                   className="w-36 h-8 sm:h-8 md:h-8 object-cover object-center"
                 />{" "}
@@ -311,7 +310,7 @@ const AnimatedNavbar = () => {
                 >
                   <button
                     onClick={() => {
-                      navigate("/hackathon"); // Updated to use navigate
+                      navigate("/"); // Updated to use navigate
                       setIsOpen(false);
                     }}
                     className="block w-full py-3 bg-[#fcf300] text-[#072ac8] font-bold rounded-xl text-center hover:bg-[#ffc600] hover:shadow-lg hover:shadow-[#fcf300]/30 transition-all duration-300"

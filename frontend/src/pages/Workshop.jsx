@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Workshop = () => {
-  const backend_url = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
+  const backend_url = "https://techtank-backend.vercel.app";
 
   const colors = {
     blue: "#38AAC9",
@@ -25,6 +27,12 @@ const Workshop = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    transactionId: "",
+  });
 
   const totalSteps = 2;
   const [screenshot, setScreenshot] = useState(null);
@@ -33,20 +41,73 @@ const Workshop = () => {
     setScreenshot(e.target.files[0]);
   };
 
+  const validateStep1 = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!name.trim()) {
+      errors.name = "Name is required";
+      isValid = false;
+    }
+
+    if (!email.trim()) {
+      errors.email = "Email is required";
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Please enter a valid email";
+      isValid = false;
+    }
+
+    if (!phoneNumber.trim()) {
+      errors.phoneNumber = "Phone number is required";
+      isValid = false;
+    } else if (!/^[0-9]{10}$/.test(phoneNumber)) {
+      errors.phoneNumber = "Please enter a valid 10-digit phone number";
+      isValid = false;
+    }
+
+    setFieldErrors({ ...fieldErrors, ...errors });
+    return isValid;
+  };
+
+  const validateStep2 = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!transactionId.trim()) {
+      errors.transactionId = "Transaction ID is required";
+      isValid = false;
+    }
+
+    if (!screenshot) {
+      errors.screenshot = "Payment screenshot is required";
+      isValid = false;
+    }
+
+    setFieldErrors({ ...fieldErrors, ...errors });
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateStep2()) return;
+
     setIsSubmitting(true);
     setError("");
 
+    const uid = "TT" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
     const formData = new FormData();
+    formData.append("uid", uid);
     formData.append("name", name);
     formData.append("email", email);
     formData.append("phoneNumber", phoneNumber);
     formData.append("transactionId", transactionId);
-    formData.append("screenshot", screenshot); // Add file to FormData
+    formData.append("screenshot", screenshot);
 
     try {
-      console.log(screenshot);
+      // console.log(screenshot);
       const response = await axios.post(
         backend_url + "/api/registration/workshop",
         formData
@@ -62,6 +123,7 @@ const Workshop = () => {
           setPhoneNumber("");
           setTransactionId("");
           setScreenshot(null);
+          navigate("/");
         }, 2000);
       }
     } catch (error) {
@@ -72,6 +134,7 @@ const Workshop = () => {
   };
 
   const nextStep = () => {
+    if (currentStep === 1 && !validateStep1()) return;
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -85,11 +148,15 @@ const Workshop = () => {
 
   const goToStep = (step) => {
     if (step >= 1 && step <= totalSteps) {
-      setCurrentStep(step);
+      if (step > currentStep) {
+        if (step === 2 && !validateStep1()) return;
+      }
+      if (step <= currentStep) {
+        setCurrentStep(step);
+      }
     }
   };
 
-  // Render stepper header
   const renderStepper = () => {
     return (
       <div className="flex flex-wrap justify-center md:justify-between w-full mb-8 max-w-2xl mx-auto px-2 sm:px-4">
@@ -98,7 +165,10 @@ const Workshop = () => {
             <div className="flex flex-col pr-1 items-center mb-4 sm:mb-0">
               <button
                 onClick={() => goToStep(index + 1)}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-lg font-bold transition-all duration-300 border-2 focus:outline-none"
+                disabled={index + 1 > currentStep}
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-lg font-bold transition-all duration-300 border-2 focus:outline-none ${
+                  index + 1 > currentStep ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 style={{
                   backgroundColor:
                     index + 1 === currentStep ? colors.yellow : colors.blue,
@@ -127,7 +197,7 @@ const Workshop = () => {
                   index + 1
                 )}
               </button>
-              <span className="text-md sm:text-white text-[#1a1a1a] mt-2  text-center">
+              <span className="text-md sm:text-white text-[#1a1a1a] mt-2 text-center">
                 {index === 0 && "Personal Info"}
                 {index === 1 && "Payment"}
               </span>
@@ -172,10 +242,18 @@ const Workshop = () => {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setFieldErrors({ ...fieldErrors, name: "" });
+                }}
+                className={`w-full p-3 bg-[#2a2a2a] border ${
+                  fieldErrors.name ? "border-red-500" : "border-[#3a3a3a]"
+                } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
               />
+              {fieldErrors.name && (
+                <p className="mt-1 text-sm text-red-500">{fieldErrors.name}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -184,10 +262,18 @@ const Workshop = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors({ ...fieldErrors, email: "" });
+                }}
+                className={`w-full p-3 bg-[#2a2a2a] border ${
+                  fieldErrors.email ? "border-red-500" : "border-[#3a3a3a]"
+                } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-500">{fieldErrors.email}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -196,10 +282,22 @@ const Workshop = () => {
               <input
                 type="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  setFieldErrors({ ...fieldErrors, phoneNumber: "" });
+                }}
+                className={`w-full p-3 bg-[#2a2a2a] border ${
+                  fieldErrors.phoneNumber
+                    ? "border-red-500"
+                    : "border-[#3a3a3a]"
+                } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
               />
+              {fieldErrors.phoneNumber && (
+                <p className="mt-1 text-sm text-red-500">
+                  {fieldErrors.phoneNumber}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex justify-end mt-6">
@@ -234,7 +332,7 @@ const Workshop = () => {
             <div className="bg-[#2a2a2a] p-4 rounded-lg shadow-lg mb-6 w-full">
               <div className="flex items-center justify-center">
                 <img
-                  src="../../public/QRcode.jpg"
+                  src="/testQrCode.jpg"
                   alt="Payment QR Code"
                   className="max-w-[200px] max-h-[180px] mx-auto"
                   onError={(e) => {
@@ -253,11 +351,23 @@ const Workshop = () => {
               <input
                 type="text"
                 value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
+                onChange={(e) => {
+                  setTransactionId(e.target.value);
+                  setFieldErrors({ ...fieldErrors, transactionId: "" });
+                }}
+                className={`w-full p-3 bg-[#2a2a2a] border ${
+                  fieldErrors.transactionId
+                    ? "border-red-500"
+                    : "border-[#3a3a3a]"
+                } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]`}
                 required
                 placeholder="Enter your transaction ID"
               />
+              {fieldErrors.transactionId && (
+                <p className="mt-1 text-sm text-red-500">
+                  {fieldErrors.transactionId}
+                </p>
+              )}
             </div>
             <div className="w-full mt-5">
               <label className="block text-sm font-medium text-white mb-2">
@@ -268,9 +378,18 @@ const Workshop = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#38AAC9] file:text-white hover:file:bg-[#38AAC9]/90"
+                  className={`w-full p-3 bg-[#2a2a2a] border ${
+                    fieldErrors.screenshot
+                      ? "border-red-500"
+                      : "border-[#3a3a3a]"
+                  } text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#38AAC9] file:text-white hover:file:bg-[#38AAC9]/90`}
                 />
               </div>
+              {fieldErrors.screenshot && (
+                <p className="mt-1 text-sm text-red-500">
+                  {fieldErrors.screenshot}
+                </p>
+              )}
               <p className="mt-1 text-xs text-[#cccccc]">
                 Please upload payment confirmation{" "}
               </p>
