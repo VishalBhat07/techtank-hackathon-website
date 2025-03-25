@@ -18,41 +18,50 @@ const TeamsData = () => {
   }, []);
 
   const handleStatusChange = async (team, status) => {
-    const leader = team.members.find((member) => member.isTeamLead);
-    if (!leader) {
-      alert("No team leader found for this team.");
-      return;
-    }
+  const leader = team.members.find((member) => member.isTeamLead);
+  if (!leader) {
+    alert("No team leader found for this team.");
+    return;
+  }
 
-    let subject, message;
-    if (status === "accept") {
-      subject = "Hackathon Registration Confirmed";
-      message = `Dear ${leader.name},<br><br>Your team's registration for the hackathon has been <b>approved</b>. See you at the event!<br><br>Best regards,<br>Tech Tank Team`;
-    } else {
-      subject = "Hackathon Registration Rejected";
-      message = `Dear ${leader.name},<br><br>Unfortunately, your team's registration for the hackathon has been <b>rejected</b>. Please contact support for further details.<br><br>Best regards,<br>Hackathon Team`;
-    }
+  let subject, message;
+  const whatsappGroupLink = "https://chat.whatsapp.com/Ihflgo60zO4GT0SJHVw05C";
 
-    try {
-      const response = await axios.post(
-        backend_url + "/api/registration/send-email",
-        {
-          email: leader.email,
-          subject,
-          message,
-        }
-      );
+  if (status === "accept") {
+    subject = "Hackathon Registration Confirmed";
+    message = `Dear ${leader.name},<br><br>
+      Your team's registration for the hackathon has been <b>approved</b>. See you at the event!<br><br>
+      Join our official WhatsApp group for important updates: 
+      <a href="${whatsappGroupLink}" target="_blank">Click here to join</a>.<br><br>
+      Best regards,<br>Tech Tank Team`;
+  } else {
+    subject = "Hackathon Registration Rejected";
+    message = `Dear ${leader.name},<br><br>
+      Unfortunately, your team's registration for the hackathon has been <b>rejected</b>. 
+      Please contact support for further details.<br><br>
+      Best regards,<br>Hackathon Team`;
+  }
 
-      if (response.data.success) {
-        alert(`Email sent successfully: ${status.toUpperCase()}ED`);
-      } else {
-        alert("Failed to send email.");
+  try {
+    const response = await axios.post(
+      backend_url + "/api/registration/send-email",
+      {
+        email: leader.email,
+        subject,
+        message,
       }
-    } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Error sending email. Please try again.");
+    );
+
+    if (response.data.success) {
+      alert(`Email sent successfully: ${status.toUpperCase()}ED`);
+    } else {
+      alert("Failed to send email.");
     }
-  };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    alert("Error sending email. Please try again.");
+  }
+};
 
   return (
     <div className="admin-container">
