@@ -13,8 +13,8 @@ const upload = multer({ storage: storage });
 router.post("/workshop", upload.single("screenshot"), async (req, res) => {
   try {
     console.log(req.body);
-    const { uid, name, email, phoneNumber, transactionId } = req.body;
-    console.log("Received registration request:", { name, transactionId, uid });
+    const { name, email, phoneNumber, transactionId } = req.body;
+    console.log("Received registration request:", { name, transactionId });
     console.log(req.file);
 
     // Check if user already exists
@@ -32,7 +32,6 @@ router.post("/workshop", upload.single("screenshot"), async (req, res) => {
 
     // Create a new user
     const newUser = new WorkshopUser({
-      uid,
       name,
       email,
       phoneNumber,
@@ -57,7 +56,7 @@ router.get("/screenshots", async (req, res) => {
   try {
     const users = await WorkshopUser.find(
       {},
-      "uid name email phoneNumber transactionId image"
+      "name email phoneNumber transactionId image"
     ); // Only fetch relevant fields
 
     console.log(users);
@@ -77,7 +76,7 @@ router.get("/screenshots", async (req, res) => {
 
 router.post("/register", upload.single("screenshot"), async (req, res) => {
   try {
-    let { uid, teamName, members, transactionId } = req.body;
+    let { teamName, members, transactionId } = req.body;
 
     console.log("Received registration request:", { teamName });
 
