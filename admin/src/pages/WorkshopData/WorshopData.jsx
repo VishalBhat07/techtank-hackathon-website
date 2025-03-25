@@ -40,10 +40,11 @@ const WorkshopData = () => {
   }
 
   try {
+    const uid = workshop._id.slice(-6).toUpperCase();
     const response = await axios.post(
       backend_url + "/api/registration/send-email",
       {
-        uid: workshop._id.slice(-6).toUpperCase(),
+        uid: uid,
         email: workshop.email,
         subject,
         message,

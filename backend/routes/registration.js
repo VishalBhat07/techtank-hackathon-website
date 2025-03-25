@@ -106,7 +106,6 @@ router.post("/register", upload.single("screenshot"), async (req, res) => {
     }
 
     const team = new Team({
-      uid,
       teamName,
       members,
       transactionId,
