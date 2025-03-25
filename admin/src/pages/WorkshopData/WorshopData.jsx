@@ -81,7 +81,7 @@ const WorkshopData = () => {
                 <td>{workshop.email}</td>
                 <td>{workshop.phoneNumber || "N/A"}</td>
                 <td>{workshop.transactionId}</td>
-                <td>{workshop.uid || "N/A"}</td> {/* Display MID */}
+                <td>{workshop._id.slice(-6).toUpperCase() || "N/A"}</td> 
                 <td>
                   {workshop.image ? (
                     <img
