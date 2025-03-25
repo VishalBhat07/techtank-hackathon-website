@@ -5,143 +5,251 @@ import "./TeamsData.css";
 
 const TeamsData = () => {
   const backend_url = import.meta.env.VITE_BACKEND_URL;
-
   const [teams, setTeams] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(backend_url + "/api/registration/teams")
-      .then((response) => response.json())
-      .then((data) => setTeams(data))
-      .catch((error) => console.error("Error fetching teams:", error));
-  }, []);
+    const fetchTeams = async () => {
+      try {
+        setIsLoading(true);
+        // Add includeScreenshots=true parameter
+        const response = await axios.get(
+          `${backend_url}/api/registration/teams?includeScreenshots=true`
+        );
+
+        if (response.data && response.data.teams) {
+          const processedTeams = response.data.teams.map((team) => {
+            // Ensure screenshot is properly formatted
+            const screenshot = team.screenshot
+              ? team.screenshot.startsWith("data:image")
+                ? team.screenshot
+                : `data:image/png;base64,${team.screenshot}`
+              : null;
+
+            return {
+              ...team,
+              screenshot,
+            };
+          });
+
+          setTeams(processedTeams);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Error fetching teams:", err);
+        setError(`Failed to load team data: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTeams();
+  }, [backend_url]);
+
+  // Define filteredTeams before using it in JSX
+  const filteredTeams = teams.filter((team) => {
+    if (!team) return false;
+
+    return (
+      (team.teamName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      team.members?.some(
+        (member) =>
+          (member?.name?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase()
+          ) ||
+          (member?.email?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase()
+          )
+      ) ||
+      (team.transactionId?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      )
+    );
+  });
 
   const handleStatusChange = async (team, status) => {
-    const leader = team.members.find((member) => member.isTeamLead);
+    const leader = team.members?.find((member) => member?.isTeamLead);
     if (!leader) {
       alert("No team leader found for this team.");
       return;
     }
 
-    let subject, message;
-    const whatsappGroupLink =
-      "https://chat.whatsapp.com/Ihflgo60zO4GT0SJHVw05C";
-
-    if (status === "accept") {
-      subject = "Hackathon Registration Confirmed";
-      message = `Dear ${leader.name},<br><br>
-      Your team's registration for the hackathon has been <b>approved</b>. See you at the event!<br><br>
-      Join our official WhatsApp group for important updates: 
-      <a href="${whatsappGroupLink}" target="_blank">Click here to join</a>.<br><br>
-      Best regards,<br>Tech Tank Team`;
-    } else {
-      subject = "Hackathon Registration Rejected";
-      message = `Dear ${leader.name},<br><br>
-      Unfortunately, your team's registration for the hackathon has been <b>rejected</b>. 
-      Please contact support for further details.<br><br>
-      Best regards,<br>Hackathon Team`;
-    }
+    const statusMessages = {
+      accept: {
+        subject: "Hackathon Registration Confirmed",
+        message: `Dear ${leader.name},<br><br>
+        Your team "<b>${team.teamName}</b>" has been <b>approved</b> for the hackathon. 🎉<br><br>
+        Join our official WhatsApp group for important updates and discussions:  
+        <a href="https://chat.whatsapp.com/KNmS5JswF948liYGMfgIWg" target="_blank">Join WhatsApp Group</a>.<br><br>
+        See you at the event!<br><br>
+        Best regards,<br>Tech Tank Team`,
+      },
+      reject: {
+        subject: "Hackathon Registration Rejected",
+        message: `Dear ${leader.name},<br><br>Unfortunately, your team "${team.teamName}" has been <b>rejected</b>. Please contact support for details.<br><br>Best regards,<br>Tech Tank Team`,
+      },
+    };
 
     try {
-      const uid = team._id.slice(-6).toUpperCase();
       const response = await axios.post(
-        backend_url + "/api/registration/send-email",
+        `${backend_url}/api/registration/send-email`,
         {
-          uid: uid,
           email: leader.email,
-          subject,
-          message,
+          subject: statusMessages[status].subject,
+          message: statusMessages[status].message,
+          teamId: team._id,
         }
       );
 
-      if (response.data.success) {
-        alert(`Email sent successfully: ${status.toUpperCase()}ED`);
+      if (response.data?.success) {
+        alert(
+          `Status updated to ${status.toUpperCase()} and email sent successfully`
+        );
+        setTeams((prevTeams) =>
+          prevTeams.map((t) => (t._id === team._id ? { ...t, status } : t))
+        );
       } else {
-        alert("Failed to send email.");
+        alert("Failed to update status.");
       }
     } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Error sending email. Please try again.");
+      console.error("Error updating status:", error);
+      alert("Error updating status. Please try again.");
     }
   };
 
+  if (isLoading) {
+    return <div className="loading">Loading team data...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
+
   return (
     <div className="admin-container">
-      <h1>Hackathon Team Registrations</h1>
+      <div className="admin-header">
+        <h1>Hackathon Team Registrations</h1>
+        <div className="admin-controls">
+          <input
+            type="text"
+            placeholder="Search teams..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <button className="home-button" onClick={() => navigate("/")}>
+            Return to Home
+          </button>
+        </div>
+      </div>
 
-      <button className="home-button" onClick={() => navigate("/")}>
-        Return to Home
-      </button>
-
-      {teams.length === 0 ? (
-        <p className="error">Fetching team details ...</p>
+      {filteredTeams.length === 0 ? (
+        <div>
+          <p className="no-results">
+            {teams.length === 0
+              ? "No teams registered yet."
+              : "No teams match your search."}
+          </p>
+        </div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Team Name</th>
-              <th>Team ID</th>
-              <th>Team Leader</th>
-              <th>Other Members</th>
-              <th>Transaction ID</th>
-              <th>Screenshot</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams.map((team) => {
-              const leader = team.members.find((member) => member.isTeamLead);
-              const otherMembers = team.members.filter(
-                (member) => !member.isTeamLead
-              );
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Team Name</th>
+                <th>Team Leader</th>
+                <th>Members</th>
+                <th>Transaction</th>
+                <th>Payment Proof</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTeams.map((team) => {
+                const leader = team.members?.find(
+                  (member) => member?.isTeamLead
+                );
+                const otherMembers =
+                  team.members?.filter((member) => !member?.isTeamLead) || [];
 
-              return (
-                <tr key={team.transactionId}>
-                  <td>{team.teamName}</td>
-                  <td>{team._id.slice(-6).toUpperCase() || "N/A"}</td>
-                  <td>
-                    {leader ? (
-                      <div>
-                        <strong>Name: {leader.name}</strong> <br />
-                        Email: {leader.email} <br />
-                        Phone: {leader.phoneNumber || "N/A"}
-                      </div>
-                    ) : (
-                      "No Team Lead"
-                    )}
-                  </td>
-                  <td>
-                    <ul>
-                      {otherMembers.length > 0 ? (
-                        otherMembers.map((member) => (
-                          <li key={member.email}>{member.name}</li>
-                        ))
-                      ) : (
-                        <li>No Other Members</li>
+                return (
+                  <tr key={team._id}>
+                    <td className="team-name">
+                      <strong>{team.teamName}</strong>
+                      {team.isRVCEStudent && (
+                        <span className="rvce-tag">RVCE</span>
                       )}
-                    </ul>
-                  </td>
-                  <td>{team.transactionId}</td>
-                  <td>
-                    {team.screenshot ? (
-                      <img
-                        src={`data:image/png;base64,${team.screenshot}`}
-                        alt="Payment Screenshot"
-                        className="screenshot"
-                        onClick={() => setSelectedImage(team.screenshot)}
-                      />
-                    ) : (
-                      "No Screenshot"
-                    )}
-                  </td>
-                  <td>
-                    <div className="button-container">
+                    </td>
+                    <td className="leader-info">
+                      {leader ? (
+                        <>
+                          <div>
+                            <strong>{leader.name}</strong>
+                          </div>
+                          <div>{leader.email}</div>
+                          <div>{leader.phoneNumber}</div>
+                          {leader.usn && <div>USN: {leader.usn}</div>}
+                        </>
+                      ) : (
+                        "No Team Lead"
+                      )}
+                    </td>
+                    <td className="member-list">
+                      {otherMembers.length > 0 ? (
+                        <ul>
+                          {otherMembers.map((member) => (
+                            <li key={member.email}>
+                              <div>
+                                <strong>{member.name}</strong>
+                              </div>
+                              <div>{member.email}</div>
+                              <div>{member.phoneNumber}</div>
+                              {member.usn && <div>USN: {member.usn}</div>}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "No Other Members"
+                      )}
+                    </td>
+                    <td className="transaction-id">{team.transactionId}</td>
+                    <td className="screenshot-cell">
+                      {team.screenshot ? (
+                        <img
+                          src={team.screenshot}
+                          alt="Payment Screenshot"
+                          className="screenshot"
+                          onClick={() => setSelectedImage(team.screenshot)}
+                          onError={(e) => {
+                            console.error(
+                              "Image failed to load:",
+                              team.screenshot
+                            );
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        "No Screenshot"
+                      )}
+                    </td>
+                    <td className="status-cell">
+                      <span
+                        className={`status-badge ${team.status || "pending"}`}
+                      >
+                        {team.status?.toUpperCase() || "PENDING"}
+                      </span>
+                    </td>
+                    <td className="action-buttons">
                       <button
                         className="accept-button"
                         onClick={() => handleStatusChange(team, "accept")}
                       >
-                        Accept
+                        Approve
                       </button>
                       <button
                         className="reject-button"
@@ -149,21 +257,32 @@ const TeamsData = () => {
                       >
                         Reject
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {selectedImage && (
         <div className="modal" onClick={() => setSelectedImage(null)}>
-          <div className="modal-content">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <span
+              className="close-button"
+              onClick={() => setSelectedImage(null)}
+            >
+              &times;
+            </span>
             <img
-              src={`data:image/png;base64,${selectedImage}`}
-              alt="Enlarged Screenshot"
+              src={selectedImage}
+              alt="Enlarged Payment Screenshot"
+              className="enlarged-screenshot"
+              onError={(e) => {
+                console.error("Failed to load enlarged image");
+                e.target.style.display = "none";
+              }}
             />
           </div>
         </div>

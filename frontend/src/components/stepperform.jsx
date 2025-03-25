@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Stepper = () => {
   const navigate = useNavigate();
-  const backend_url = "https://techtank-backend.vercel.app";
+  const backend_url = "http://localhost:8080";
 
   // Color palette
   const colors = {
@@ -24,32 +24,31 @@ const Stepper = () => {
   const [email, setEmail] = useState("");
   const [teamName, setTeamName] = useState("");
   const [memberCount, setMemberCount] = useState(2);
+  const [isRVCEStudent, setIsRVCEStudent] = useState(false);
   const [members, setMembers] = useState([
-    { name: "", email: "", phoneNumber: "", isTeamLead: true },
-    { name: "", email: "", phoneNumber: "", isTeamLead: false },
+    { name: "", email: "", phoneNumber: "", usn: "", isTeamLead: true },
+    { name: "", email: "", phoneNumber: "", usn: "", isTeamLead: false },
   ]);
   const [transactionId, setTransactionId] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-
+  const [currentQR, setCurrentQR] = useState(1);
   const totalSteps = 4;
 
   const handleMemberCountChange = (e) => {
     const count = parseInt(e.target.value);
     setMemberCount(count);
 
-    // Create new members array with the selected count
     let newMembers = [...members];
 
-    // Make sure we have exactly 'count' members
     if (newMembers.length < count) {
-      // Add more members if needed
       while (newMembers.length < count) {
         newMembers.push({
           name: "",
           email: "",
           phoneNumber: "",
+          usn: "",
           isTeamLead: false,
         });
       }
@@ -77,29 +76,128 @@ const Stepper = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setScreenshot(file);
-    console.log("File selected:", file);
+  };
+
+  // Validation functions
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    return /^\d{10}$/.test(phone);
+  };
+
+  const validateUSN = (usn) => {
+    return /^1RV\d{2}[A-Z]{2}\d{3}$/i.test(usn);
+  };
+
+  const validateStep1 = () => {
+    if (!email) {
+      setError("Please enter your email address");
+      return false;
+    }
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!teamName) {
+      setError("Please enter your team name");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    for (let i = 0; i < memberCount; i++) {
+      const member = members[i];
+      if (!member.name) {
+        setError(
+          `Please enter name for ${i === 0 ? "Team Lead" : `Member ${i}`}`
+        );
+        return false;
+      }
+      if (!member.email) {
+        setError(
+          `Please enter email for ${i === 0 ? "Team Lead" : `Member ${i}`}`
+        );
+        return false;
+      }
+      if (!validateEmail(member.email)) {
+        setError(
+          `Please enter a valid email for ${
+            i === 0 ? "Team Lead" : `Member ${i}`
+          }`
+        );
+        return false;
+      }
+      if (!member.phoneNumber) {
+        setError(
+          `Please enter phone number for ${
+            i === 0 ? "Team Lead" : `Member ${i}`
+          }`
+        );
+        return false;
+      }
+      if (!validatePhone(member.phoneNumber)) {
+        setError(
+          `Phone number must be 10 digits for ${
+            i === 0 ? "Team Lead" : `Member ${i}`
+          }`
+        );
+        return false;
+      }
+      if (isRVCEStudent && !member.usn) {
+        setError(
+          `Please enter USN for ${i === 0 ? "Team Lead" : `Member ${i}`}`
+        );
+        return false;
+      }
+      if (isRVCEStudent && !validateUSN(member.usn)) {
+        setError(
+          `Please enter a valid USN (e.g., 1RV20CS001) for ${
+            i === 0 ? "Team Lead" : `Member ${i}`
+          }`
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validateStep4 = () => {
+    if (!transactionId) {
+      setError("Please enter transaction ID");
+      return false;
+    }
+    if (!screenshot) {
+      setError("Please upload payment screenshot");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
 
-    if (!screenshot) {
-      setError("Please upload a payment screenshot.");
+    if (!validateStep4()) {
       setIsSubmitting(false);
       return;
     }
 
+    setIsSubmitting(true);
+    setError("");
+
     try {
-      const uid =
-        "TT" + Math.random().toString(36).substring(2, 8).toUpperCase();
       const formData = new FormData();
-      formData.append("uid", uid);
       formData.append("teamName", teamName);
       formData.append("transactionId", transactionId);
-      formData.append("screenshot", screenshot); // Send as Base64
-      formData.append("members", JSON.stringify(members)); // Convert array to string
+      formData.append("screenshot", screenshot);
+      formData.append("isRVCEStudent", isRVCEStudent);
+      formData.append("members", JSON.stringify(members.slice(0, memberCount)));
 
       const response = await axios.post(
         backend_url + "/api/registration/register",
@@ -114,12 +212,20 @@ const Stepper = () => {
           setCurrentStep(1);
           setEmail("");
           setTeamName("");
-          setMemberCount(1);
+          setMemberCount(2);
           setMembers([
-            { name: "", email: "", phoneNumber: "", isTeamLead: true },
+            { name: "", email: "", phoneNumber: "", usn: "", isTeamLead: true },
+            {
+              name: "",
+              email: "",
+              phoneNumber: "",
+              usn: "",
+              isTeamLead: false,
+            },
           ]);
           setTransactionId("");
           setScreenshot(null);
+          setIsRVCEStudent(false);
           navigate("/");
         }, 2000);
       }
@@ -132,16 +238,11 @@ const Stepper = () => {
   };
 
   const nextStep = () => {
-    // Validate current step before proceeding
-    if (currentStep === 1 && !email) {
-      setError("Please enter your email address");
-      return;
-    }
+    setError("");
 
-    if (currentStep === 2 && !teamName) {
-      setError("Please enter your team name");
-      return;
-    }
+    if (currentStep === 1 && !validateStep1()) return;
+    if (currentStep === 2 && !validateStep2()) return;
+    if (currentStep === 3 && !validateStep3()) return;
 
     if (currentStep === 2) {
       let updatedMembers = [...members];
@@ -152,6 +253,7 @@ const Stepper = () => {
             name: "",
             email: "",
             phoneNumber: "",
+            usn: "",
             isTeamLead: false,
           });
         }
@@ -168,31 +270,20 @@ const Stepper = () => {
       setMembers(updatedMembers);
     }
 
-    if (currentStep === 3) {
-      const isValid = members.every(
-        (member) => member.name && member.email && member.phoneNumber
-      );
-
-      if (!isValid) {
-        setError("Please fill in all team member details");
-        return;
-      }
-    }
-
-    setError("");
-
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
+    setError("");
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const goToStep = (step) => {
+    setError("");
     if (step >= 1 && step <= currentStep) {
       setCurrentStep(step);
     }
@@ -200,7 +291,7 @@ const Stepper = () => {
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
-    if (email) {
+    if (validateStep1()) {
       const newMembers = [...members];
       newMembers[0] = { ...newMembers[0], email };
       setMembers(newMembers);
@@ -217,19 +308,9 @@ const Stepper = () => {
               <button
                 onClick={() => goToStep(index + 1)}
                 disabled={index + 1 > currentStep}
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-lg font-bold transition-all duration-300 border-2 focus:outline-none
-                  ${
-                    index + 1 > currentStep
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }
-                  ${
-                    index + 1 < currentStep
-                      ? `bg-${colors.blue} text-${colors.yellow} border-${colors.blue}`
-                      : index + 1 === currentStep
-                      ? `bg-${colors.yellow} text-${colors.blue} border-${colors.yellow}`
-                      : `bg-${colors.blue} text-${colors.yellow} border-${colors.blue}`
-                  }`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-lg font-bold transition-all duration-300 border-2 focus:outline-none ${
+                  index + 1 > currentStep ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 style={{
                   backgroundColor:
                     index + 1 === currentStep ? colors.yellow : colors.blue,
@@ -267,14 +348,7 @@ const Stepper = () => {
             </div>
             {index < totalSteps - 1 && (
               <div
-                className={`hidden md:block flex-1 h-1 mx-2 self-center
-                  ${
-                    index + 1 < currentStep
-                      ? `bg-${colors.blue}`
-                      : index + 1 === currentStep
-                      ? `bg-gradient-to-r from-${colors.blue} to-${colors.lightGray}`
-                      : `bg-${colors.lightGray}`
-                  }`}
+                className="hidden md:block flex-1 h-1 mx-2 self-center"
                 style={{
                   backgroundColor:
                     index + 1 < currentStep ? colors.blue : colors.lightGray,
@@ -318,6 +392,11 @@ const Stepper = () => {
               required
             />
           </div>
+          {error && (
+            <div className="bg-red-900 border border-red-700 text-white px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
           <div className="flex justify-end">
             <button
               type="submit"
@@ -376,6 +455,23 @@ const Stepper = () => {
               </select>
             </div>
           </div>
+          <div className="mt-4">
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="rvceStudent"
+                checked={isRVCEStudent}
+                onChange={(e) => setIsRVCEStudent(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="rvceStudent"
+                className="ml-2 block text-sm text-white"
+              >
+                Team includes RVCE students
+              </label>
+            </div>
+          </div>
           {error && (
             <div className="bg-red-900 border border-red-700 text-white px-4 py-3 rounded my-4">
               {error}
@@ -420,7 +516,6 @@ const Stepper = () => {
             Team Members ({memberCount})
           </h3>
 
-          {/* Only show the first 'memberCount' members */}
           {members.slice(0, memberCount).map((member, index) => (
             <div
               key={index}
@@ -481,9 +576,31 @@ const Stepper = () => {
                     }
                     className="w-full p-3 bg-[#1a1a1a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
                     required
+                    maxLength="10"
                   />
                 </div>
               </div>
+              {isRVCEStudent && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-white mb-2">
+                    USN (RVCE Students)
+                  </label>
+                  <input
+                    type="text"
+                    value={member.usn}
+                    onChange={(e) =>
+                      handleMemberChange(
+                        index,
+                        "usn",
+                        e.target.value.toUpperCase()
+                      )
+                    }
+                    className="w-full p-3 bg-[#1a1a1a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9]"
+                    placeholder="e.g., 1RV20CS001"
+                    required={isRVCEStudent}
+                  />
+                </div>
+              )}
             </div>
           ))}
 
@@ -526,15 +643,15 @@ const Stepper = () => {
         <div className="bg-[#1a1a1a] p-6 rounded-lg shadow-lg border border-[#3a3a3a]">
           <div className="flex items-center space-x-2 text-white pb-2">
             <h3 className="text-xl font-semibold">Payment Details - </h3>
-            <span className="text-xl font-semibold text-[#E4CD15]">₹500</span>
+            <span className="text-xl font-semibold text-[#E4CD15]">₹399</span>
           </div>
 
           <div className="flex flex-col items-center mb-6">
-            <div className="bg-[#2a2a2a] p-6 rounded-lg shadow-lg border border-[#3a3a3a] mb-6 w-full max-w-md">
+            <div className="bg-[#2a2a2a] p-6 rounded-lg shadow-lg border border-[#3a3a3a] mb-4 w-full max-w-md">
               <div className="bg-[#1a1a1a] w-full h-48 flex items-center justify-center rounded-lg">
                 <img
-                  src="/testQrCode.jpg"
-                  alt="Payment QR Code"
+                  src={`/qr${currentQR}.jpg`}
+                  alt={`Payment QR Code ${currentQR}`}
                   className="max-w-[200px] max-h-[180px] mx-auto"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -543,9 +660,38 @@ const Stepper = () => {
                   }}
                 />
               </div>
+              <div className="text-center mt-2 text-white">
+                QR Code {currentQR}
+              </div>
             </div>
 
-            <div className="w-full max-w-md">
+            <div className="text-white text-sm mb-4 text-center">
+              You can pay to any one of the available QR codes
+            </div>
+
+            <button
+              onClick={() => setCurrentQR((prev) => (prev % 3) + 1)}
+              className="p-2 rounded-full bg-[#3a3a3a] hover:bg-[#4a4a4a] transition-colors flex items-center"
+              title="Switch QR code"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
+              Switch QR Code
+            </button>
+
+            <div className="w-full max-w-md mt-6">
               <label className="block text-sm font-medium text-white mb-2">
                 Transaction ID
               </label>
@@ -558,7 +704,7 @@ const Stepper = () => {
                 placeholder="Enter your transaction ID"
               />
             </div>
-            <div className="w-full  max-w-md mt-5">
+            <div className="w-full max-w-md mt-5">
               <label className="block text-sm font-medium text-white mb-2">
                 Upload Transaction Screenshot
               </label>
@@ -568,6 +714,7 @@ const Stepper = () => {
                   accept="image/*"
                   onChange={handleFileChange}
                   className="w-full p-3 bg-[#2a2a2a] border border-[#3a3a3a] text-white rounded-md focus:ring-2 focus:ring-[#38AAC9] focus:border-[#38AAC9] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#38AAC9] file:text-white hover:file:bg-[#38AAC9]/90"
+                  required
                 />
               </div>
               <p className="mt-1 text-xs text-[#cccccc]">
