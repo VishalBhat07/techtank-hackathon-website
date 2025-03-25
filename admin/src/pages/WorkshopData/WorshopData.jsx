@@ -80,7 +80,7 @@ const WorkshopData = () => {
         message: `Dear ${workshop.name},<br><br>
       Your registration for the workshop has been <b>approved</b>. 🎉<br><br>
       Join our official WhatsApp group for important updates and discussions:  
-      <a href="https://chat.whatsapp.com/Ihflgo60zO4GT0SJHVw05C" target="_blank">Join WhatsApp Group</a>.<br><br>
+      <a href="https://chat.whatsapp.com/KNmS5JswF948liYGMfgIWg" target="_blank">Join WhatsApp Group</a>.<br><br>
       See you at the event!<br><br>
       Best regards,<br>Workshop Team`,
       },
@@ -102,7 +102,7 @@ const WorkshopData = () => {
           email: workshop.email,
           subject: statusMessages[status].subject,
           message: statusMessages[status].message,
-          registrationId: workshop._id,
+          registrationId: null,
         }
       );
       console.log("Email API response:", response.data);

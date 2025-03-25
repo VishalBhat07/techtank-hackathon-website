@@ -84,7 +84,7 @@ const TeamsData = () => {
         message: `Dear ${leader.name},<br><br>
         Your team "<b>${team.teamName}</b>" has been <b>approved</b> for the hackathon. 🎉<br><br>
         Join our official WhatsApp group for important updates and discussions:  
-        <a href="https://chat.whatsapp.com/KNmS5JswF948liYGMfgIWg" target="_blank">Join WhatsApp Group</a>.<br><br>
+        <a href="https://chat.whatsapp.com/Ihflgo60zO4GT0SJHVw05C" target="_blank">Join WhatsApp Group</a>.<br><br>
         See you at the event!<br><br>
         Best regards,<br>Tech Tank Team`,
       },
