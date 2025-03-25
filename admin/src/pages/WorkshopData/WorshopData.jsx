@@ -21,36 +21,45 @@ const WorkshopData = () => {
   }, []);
 
   const handleStatusChange = async (workshop, status) => {
-    let subject, message;
-    if (status === "accept") {
-      subject = "Workshop Registration Confirmed";
-      message = `Dear ${workshop.name},<br><br>Your registration for the workshop has been <b>approved</b>. See you at the event!<br><br>Best regards,<br>Workshop Team`;
-    } else {
-      subject = "Workshop Registration Rejected";
-      message = `Dear ${workshop.name},<br><br>Unfortunately, your registration for the workshop has been <b>rejected</b>. Please contact support for further details.<br><br>Best regards,<br>Workshop Team`;
-    }
+  let subject, message;
+  const whatsappGroupLink = "https://chat.whatsapp.com/KNmS5JswF948liYGMfgIWg";
 
-    try {
-      const response = await axios.post(
-        backend_url + "/api/registration/send-email",
-        {
-          email: workshop.email,
-          subject,
-          message,
-        }
-      );
+  if (status === "accept") {
+    subject = "Workshop Registration Confirmed";
+    message = `Dear ${workshop.name},<br><br>
+      Your registration for the workshop has been <b>approved</b>. See you at the event!<br><br>
+      Join our official WhatsApp group for important updates: 
+      <a href="${whatsappGroupLink}" target="_blank">Click here to join</a>.<br><br>
+      Best regards,<br>Workshop Team`;
+  } else {
+    subject = "Workshop Registration Rejected";
+    message = `Dear ${workshop.name},<br><br>
+      Unfortunately, your registration for the workshop has been <b>rejected</b>. 
+      Please contact support for further details.<br><br>
+      Best regards,<br>Workshop Team`;
+  }
 
-      if (response.data.success) {
-        alert(`Email sent successfully: ${status.toUpperCase()}ED`);
-      } else {
-        alert("Failed to send email.");
+  try {
+    const response = await axios.post(
+      backend_url + "/api/registration/send-email",
+      {
+        email: workshop.email,
+        subject,
+        message,
       }
-    } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Error sending email. Please try again.");
-    }
-  };
+    );
 
+    if (response.data.success) {
+      alert(`Email sent successfully: ${status.toUpperCase()}ED`);
+    } else {
+      alert("Failed to send email.");
+    }
+  } catch (error) {
+    console.error("Error sending email:", error);
+    alert("Error sending email. Please try again.");
+  }
+};
+  
   return (
     <div className="admin-container">
       <h1>Workshop Registrations</h1>
