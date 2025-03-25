@@ -87,7 +87,7 @@ const TeamsData = () => {
               return (
                 <tr key={team.transactionId}>
                   <td>{team.teamName}</td>
-                  <td>{team.uid || "N/A"}</td>
+                  <td>{team._id.slice(-6).toUpperCase() || "N/A"}</td>
                   <td>
                     {leader ? (
                       <div>
