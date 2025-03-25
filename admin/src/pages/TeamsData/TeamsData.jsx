@@ -46,6 +46,7 @@ const TeamsData = () => {
     const response = await axios.post(
       backend_url + "/api/registration/send-email",
       {
+        uid: team._id.slice(-6).toUpperCase(),
         email: leader.email,
         subject,
         message,
