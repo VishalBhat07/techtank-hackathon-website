@@ -101,7 +101,7 @@ const TeamsData = () => {
           email: leader.email,
           subject: statusMessages[status].subject,
           message: statusMessages[status].message,
-          teamId: team._id,
+          registrationId: team._id,
         }
       );
 
