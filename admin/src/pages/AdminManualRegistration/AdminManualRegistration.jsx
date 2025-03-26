@@ -10,8 +10,8 @@ const AdminManualRegistration = () => {
     email: "",
     phoneNumber: "",
     transactionId: "",
-    eventType: "workshop", // 'workshop' or 'hackathon'
-    teamName: "", // For hackathon
+    eventType: "workshop",
+    teamName: "",
     status: "pending",
   });
   const [editingId, setEditingId] = useState(null);
@@ -31,7 +31,6 @@ const AdminManualRegistration = () => {
       setRegistrations(response.data);
     } catch (err) {
       setError("Failed to fetch registrations");
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -39,62 +38,43 @@ const AdminManualRegistration = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
       if (editingId) {
-        // Update existing registration
         await axios.put(
           `${backend_url}/api/admin/registrations/${editingId}`,
           formData
         );
       } else {
-        // Create new registration
         await axios.post(`${backend_url}/api/admin/registrations`, formData);
       }
-
       fetchRegistrations();
       resetForm();
     } catch (err) {
-      setError(err.response?.data?.message || "Operation failed");
-      console.error(err);
+      setError("Operation failed");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleEdit = (registration) => {
-    setFormData({
-      name: registration.name,
-      email: registration.email,
-      phoneNumber: registration.phoneNumber,
-      transactionId: registration.transactionId,
-      eventType: registration.eventType,
-      teamName: registration.teamName || "",
-      status: registration.status,
-    });
+    setFormData({ ...registration, teamName: registration.teamName || "" });
     setEditingId(registration._id);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this registration?"))
-      return;
-
+    if (!window.confirm("Are you sure?")) return;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await axios.delete(`${backend_url}/api/admin/registrations/${id}`);
       fetchRegistrations();
     } catch (err) {
-      setError("Failed to delete registration");
-      console.error(err);
+      setError("Failed to delete");
     } finally {
       setIsLoading(false);
     }
@@ -111,107 +91,83 @@ const AdminManualRegistration = () => {
       status: "pending",
     });
     setEditingId(null);
-    setError("");
   };
 
   return (
-    <div className="admin-manual-registration">
-      <h1>Manual Registration Management</h1>
-
-      <div className="form-container">
+    <div className="container">
+      <div className="card">
         <h2>{editingId ? "Edit Registration" : "Add New Registration"}</h2>
-
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Event Type:</label>
-            <select
-              name="eventType"
-              value={formData.eventType}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="workshop">Workshop</option>
-              <option value="hackathon">Hackathon</option>
-            </select>
-          </div>
+          <select
+            name="eventType"
+            value={formData.eventType}
+            onChange={handleInputChange}
+          >
+            <option value="workshop">Workshop</option>
+            <option value="hackathon">Hackathon</option>
+          </select>
 
           {formData.eventType === "hackathon" && (
-            <div className="form-group">
-              <label>Team Name:</label>
-              <input
-                type="text"
-                name="teamName"
-                value={formData.teamName}
-                onChange={handleInputChange}
-              />
-            </div>
+            <input
+              type="text"
+              name="teamName"
+              placeholder="Team Name"
+              value={formData.teamName}
+              onChange={handleInputChange}
+            />
           )}
 
-          <div className="form-group">
-            <label>Name:</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+          />
+          <input
+            type="tel"
+            name="phoneNumber"
+            placeholder="Phone Number"
+            value={formData.phoneNumber}
+            onChange={handleInputChange}
+            required
+          />
+          <input
+            type="text"
+            name="transactionId"
+            placeholder="Transaction ID"
+            value={formData.transactionId}
+            onChange={handleInputChange}
+            required
+          />
 
-          <div className="form-group">
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleInputChange}
+          >
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
 
-          <div className="form-group">
-            <label>Phone Number:</label>
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+          {error && <p className="error">{error}</p>}
 
-          <div className="form-group">
-            <label>Transaction ID:</label>
-            <input
-              type="text"
-              name="transactionId"
-              value={formData.transactionId}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Status:</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleInputChange}
-            >
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-actions">
+          <div className="btn-group">
             <button type="submit" disabled={isLoading}>
               {isLoading ? "Processing..." : editingId ? "Update" : "Add"}
             </button>
             {editingId && (
-              <button type="button" onClick={resetForm} disabled={isLoading}>
+              <button type="button" className="cancel-btn" onClick={resetForm}>
                 Cancel
               </button>
             )}
@@ -219,11 +175,10 @@ const AdminManualRegistration = () => {
         </form>
       </div>
 
-      <div className="registrations-list">
+      <div className="card">
         <h2>Existing Registrations</h2>
-
         {isLoading && registrations.length === 0 ? (
-          <p>Loading registrations...</p>
+          <p>Loading...</p>
         ) : registrations.length === 0 ? (
           <p>No registrations found</p>
         ) : (
@@ -251,14 +206,13 @@ const AdminManualRegistration = () => {
                   <td>{reg.email}</td>
                   <td>{reg.phoneNumber}</td>
                   <td>{reg.transactionId}</td>
-                  <td>
-                    <span className={`status-badge ${reg.status}`}>
-                      {reg.status}
-                    </span>
-                  </td>
+                  <td>{reg.status}</td>
                   <td>
                     <button onClick={() => handleEdit(reg)}>Edit</button>
-                    <button onClick={() => handleDelete(reg._id)}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(reg._id)}
+                    >
                       Delete
                     </button>
                   </td>
