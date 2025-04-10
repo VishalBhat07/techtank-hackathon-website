@@ -12,14 +12,24 @@ const TeamsData = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const fixSchema = async () => {
+    const res = await axios.patch(
+      `${backend_url}/api/registration/update-teams-fields`
+    );
+    console.log(res);
+  };
+
   useEffect(() => {
     const fetchTeams = async () => {
       try {
         setIsLoading(true);
+        await fixSchema();
         // Add includeScreenshots=true parameter
         const response = await axios.get(
           `${backend_url}/api/registration/teams?includeScreenshots=true`
         );
+
+        console.log(response.data.teams);
 
         if (response.data && response.data.teams) {
           const processedTeams = response.data.teams.map((team) => {

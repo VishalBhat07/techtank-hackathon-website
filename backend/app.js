@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 const corsOptions = {
   origin: "*", // Allows all origins (Not recommended for production)
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
   allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 };
 app.use(cors(corsOptions));
