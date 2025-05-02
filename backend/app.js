@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
 // Middleware
 const corsOptions = {
@@ -41,6 +41,7 @@ connectDB();
 // app.use("/api/payment", require("./routes/payment"));
 app.use("/api/submit", require("./routes/submission"));
 app.use("/api/registration", require("./routes/registration"));
+app.use("/api/feedback",require('./routes/feedbackRoutes')) ;
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
