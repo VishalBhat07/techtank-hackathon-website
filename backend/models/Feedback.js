@@ -10,18 +10,18 @@ const feedbackSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0,
-    max: 3
+    max: 5
   },
   eventRatings: {
-    preHackWorkshop: { type: Number, min: 0, max: 3 },
-    ideationRound: { type: Number, min: 0, max: 3 },
-    hackathon: { type: Number, min: 0, max: 3 },
-    finalPitch: { type: Number, min: 0, max: 3 }
+    preHackWorkshop: { type: Number, min: 0, max: 5 },
+    ideationRound: { type: Number, min: 0, max: 5 },
+    hackathon: { type: Number, min: 0, max: 5 },
+    finalPitch: { type: Number, min: 0, max: 5 }
   },
-  mentoringQuality: { type: Number, min: 0, max: 3 },
-  organizerSupport: { type: Number, min: 0, max: 3 },
-  venueQuality: { type: Number, min: 0, max: 3 },
-  judgingFairness: { type: Number, min: 0, max: 3 },
+  mentoringQuality: { type: Number, min: 0, max: 5 },
+  organizerSupport: { type: Number, min: 0, max: 5 },
+  venueQuality: { type: Number, min: 0, max: 5 },
+  judgingFairness: { type: Number, min: 0, max: 5 },
   quickFeedback: String,
   continueSupport: Boolean,
   contactPermission: Boolean,
